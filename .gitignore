@@ -3,10 +3,8 @@
 .AppleDouble
 .LSOverride
 
-# Ignore datasets
-data/embeddings/*
-data/raw/*
-data/transformed/*
+# Default ignore datasets
+data/
 
 # Ignore models
 models/*

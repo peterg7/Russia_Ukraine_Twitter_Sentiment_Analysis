@@ -4,7 +4,9 @@
 .LSOverride
 
 # Default ignore datasets
-data/
+data/*
+
+!part1/data/*
 
 # Ignore models
 models/*

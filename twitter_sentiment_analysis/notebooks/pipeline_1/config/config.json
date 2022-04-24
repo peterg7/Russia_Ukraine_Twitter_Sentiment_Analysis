@@ -1,0 +1,49 @@
+{
+    "EXTRACT": {
+        "data_import_version": 15, 
+        "data_import_dest": "../../data/slava_ukraini_tweets{version}.csv",
+        "new_dataset": false
+    },
+
+    "TRANSFORM": {
+        "clean_tweet": [
+            "https?:\\/\\/[a-zA-Z0-9@:%._\\/+~#=?&;-]*",
+            "\\$[a-zA-Z0-9]*",
+            "\\@[a-zA-Z0-9]*",
+            "[^a-zA-Z\\\"]"
+        ],
+        "clean_hashtag": [
+            "\\$[a-zA-Z0-9]*",
+            "[^a-zA-Z\\\"]"
+        ],
+        "column_mappings": {
+            "date": "date",
+            "user_name": "username",
+            "retweets": "retweets",
+            "text": "tweet",
+            "hashtags": "hashtags"
+        },
+        "filter_words": [
+            "ukraine", 
+            "russia", 
+            "zelensky"
+        ],
+        "display_terms": 25
+    },
+
+    "MODEL": {
+        "build_models": true
+    },
+
+    "LOAD": {
+        "config": "./config/config_{timestamp}.json",
+        "nb_export": "../pipeline_2/pipeline_1",
+        "transform": "./data/transformed/slava_ukraine_sentiment_{timestamp}.csv",
+        "word_vec": "./models/slava_word_vec_{timestamp}.model",
+        "kmeans": "./models/slava_kmeans_{timestamp}.joblib",
+        "embeddings": "./data/embeddings/slava_words_{timestamp}.csv",
+        "vectorizer": "./models/slava_vectorizer_{timestamp}.joblib",
+        "svc": "./models/slava_linearSVC_{timestamp}.joblib",
+        "nb": "./models/slava_multinomialNB_{timestamp}.joblib"
+    }
+}

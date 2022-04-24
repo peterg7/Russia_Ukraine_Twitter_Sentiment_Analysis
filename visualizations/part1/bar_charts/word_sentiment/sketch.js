@@ -25,9 +25,6 @@ var svg = d3.select('body').append('svg')
                                 SCREEN_DIMENSIONS.width, SCREEN_DIMENSIONS.height])
             .attr("style", "max-width: 100%; height: auto; height: intrinsic;");
 
-const targetCols = ['sentiments']
-
-
 const xParams = {
     value: row => row.percent,
     scale: d3.scaleLinear()

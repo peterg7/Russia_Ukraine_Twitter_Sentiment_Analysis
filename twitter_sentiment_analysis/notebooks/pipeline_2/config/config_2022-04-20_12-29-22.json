@@ -1,0 +1,1 @@
+{"sentiment_vals": {"value_mapping": {"-1": "negative", "0": "neutral", "1": "positive"}, "cluster_mapping": {"0": 0, "1": 1, "2": -1}}}

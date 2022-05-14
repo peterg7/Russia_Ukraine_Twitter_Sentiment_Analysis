@@ -31,8 +31,8 @@ When items are required, default values have been included. All fields taged wit
   "kmeans": "", 								# Path to existing kMeans model
   "embeddings": "", 						# Path to existing vector embeddings
   "vectorizer": "", 						# Path to existing vectorizer model
-  "svc": "", 										# Path to existing LinearSVC model
-  "nb": "" 											# Path to existing MultinomialNB model
+  "linear_svc": "",							# Path to existing LinearSVC model
+  "multi_nb": ""								# Path to existing MultinomialNB model
 }
 ```
 
@@ -42,10 +42,10 @@ When items are required, default values have been included. All fields taged wit
 "TRANSFORM": {
   "clean_tweet": [],  					# List of regex rules for cleaning each tweet
   "clean_hashtag": [], 					# List of regex rules for cleaning each hastag
-  "column_mappings": { 					# Map of raw columns to expected columns (REQUIRED)
-    "": "username", # REQUIRED INPUT
-    "": "tweet", 		# REQUIRED INPUT
-    "": "hashtags" 	# REQUIRED INPUT
+  "column_mappings": { 					# Map of raw columns to expected columns 
+    "": "username",
+    "": "tweet",
+    "": "hashtags"
   },
   "filter_words": [], 					# Only process tweets containing these words
   "word_vec_args": { 						# Used to build a word2vec model if no model extracted 
@@ -92,10 +92,10 @@ When items are required, default values have been included. All fields taged wit
     "ngram_range": (1,2),
     "stop_words": "english"
   }, 
-  "svc_args": { 								# Used to build a LinearSVC model if no model extracted
+  "linear_svc_args": { 								# For a LinearSVC model if no model extracted
     "random_state": 0
   },
-  "nb_args": { } 								# Used to build a MultinomialNB model if no model extracted
+  "multi_nb_args": { } 								# For a MultinomialNB model if no model extracted
 }
 ```
 
@@ -104,14 +104,14 @@ When items are required, default values have been included. All fields taged wit
 ```python
 "LOAD": {
   "config": "", 								# Location to output the settings used for the execution
-  "nb_export": "", 							# Location to export this entire notebook as Python script
+  "notebook": "", 							# Location to export this entire notebook as Python script
   "transform": "", 							# Location to store the transformed sentiment dataset
   "word_vec": "", 							# Path to save the word2vec model
   "kmeans": "", 								# Path to save the kMeans model
   "embeddings": "",							# Path to save the generated embeddings
   "vectorizer": "", 						# Path to save the vectorizer model
-  "svc": "", 										# Path to save the LinearSVC model
-  "nb": ""											# Path to save the MultinomialNB model
+  "linear_svc": "",							# Path to save the LinearSVC model
+  "multi_nb": ""								# Path to save the MultinomialNB model
 }
 ```
 
@@ -141,8 +141,8 @@ When items are required, default values have been included. All fields taged wit
     "kmeans",
     "embeddings",
     "vectorizer",
-    "svc",
-    "nb"
+    "linear_svc",
+    "multi_nb"
   ]
 }
 ```

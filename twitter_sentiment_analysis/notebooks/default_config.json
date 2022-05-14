@@ -1,0 +1,110 @@
+{
+    "EXTRACT": {
+        "import_path": null,
+        "import_version": null,
+        "import_dest": "./tweet_sentiment_{timestamp}.csv",
+        "new_dataset": false,
+        "word_vec": "",
+        "kmeans": "",
+        "embeddings": "",
+        "vectorizer": "",
+        "linear_svc": "",
+        "multi_nb": ""
+    },
+
+    "TRANSFORM": {
+        "clean_tweet": [],
+        "clean_hashtag": [],
+        "column_mappings": {},
+        "filter_words": [],
+        "word_vec_args": {
+            "vector_size": 300,
+            "window": 5,
+            "min_count": 4,
+            "workers": null,
+            "negative": 20,
+            "sample": 1e-5,
+            "alpha": 0.03,
+            "min_alpha": 0.007,
+            "seed": 42,
+            "progress_per": 50000,
+            "epochs": 30,
+            "report_delay": 1
+        },
+        "kmeans_args": {
+            "n_clusters": 3,
+            "max_iter": 1000,
+            "n_init": 50,
+            "random_state": 42
+        },
+        "sentiment_threshold": 0.15,
+        "sentiment_map": {
+            "-1": "negative",
+            "0": "neutral",
+            "1": "positive"
+        },
+        "display_terms": 25
+    },
+
+    "MODEL": {
+        "build_models": true,
+        "vectorizer_args": {
+            "min_df": 3,
+            "sublinear_tf": true,
+            "ngram_range": [1, 2],
+            "stop_words": "english"
+        },
+        "linear_svc_args": {},
+        "multi_nb_args": {}
+    },
+
+    "LOAD": {
+        "config": "",
+        "notebook": "",
+        "transform": "",
+        "word_vec": "",
+        "kmeans": "",
+        "embeddings": "",
+        "vectorizer": "",
+        "linear_svc": "",
+        "multi_nb": ""
+    },
+
+    "metadata": {
+        "required_params": [
+            "import_path"
+        ],
+        "necessary_data_mappings": [
+            "username",
+            "tweet",
+            "hashtags"
+        ],
+        "necessary_sentiment_values": [
+            "negative",
+            "neutral",
+            "positive"
+        ],
+        "locations": [
+            "import_path",
+            "import_dest",
+            "config",
+            "notebook",
+            "word_vec",
+            "kmeans",
+            "embeddings",
+            "vectorizer",
+            "linear_svc",
+            "multi_nb"
+        ],
+        "areas": {
+            "required": [
+                "EXTRACT"
+            ],
+            "optional": [
+                "TRANSFORM",
+                "MODEL",
+                "LOAD"
+            ]
+        }
+    }
+}

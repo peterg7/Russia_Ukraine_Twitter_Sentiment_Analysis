@@ -1,7 +1,8 @@
 {
     "EXTRACT": {
-        "data_import_version": 15, 
-        "data_import_dest": "../../data/slava_ukraini_tweets{version}.csv",
+        "import_path": "https://www.kaggle.com/datasets/gpreda/slava-ukraini-tweets/versions/{version}",
+        "import_version": 8,
+        "import_dest": "../../data/slava_ukraini_tweets{version}.csv",
         "new_dataset": false
     },
 
@@ -24,8 +25,8 @@
             "hashtags": "hashtags"
         },
         "filter_words": [
-            "ukraine", 
-            "russia", 
+            "ukraine",
+            "russia",
             "zelensky"
         ],
         "display_terms": 25
@@ -37,13 +38,13 @@
 
     "LOAD": {
         "config": "./config/config_{timestamp}.json",
-        "nb_export": "../pipeline_2/pipeline_1",
+        "notebook": "../pipeline_2/pipeline_1",
         "transform": "./data/transformed/slava_ukraine_sentiment_{timestamp}.csv",
         "word_vec": "./models/slava_word_vec_{timestamp}.model",
         "kmeans": "./models/slava_kmeans_{timestamp}.joblib",
         "embeddings": "./data/embeddings/slava_words_{timestamp}.csv",
         "vectorizer": "./models/slava_vectorizer_{timestamp}.joblib",
-        "svc": "./models/slava_linearSVC_{timestamp}.joblib",
-        "nb": "./models/slava_multinomialNB_{timestamp}.joblib"
+        "linear_svc": "./models/slava_linearSVC_{timestamp}.joblib",
+        "multi_nb": "./models/slava_multinomialNB_{timestamp}.joblib"
     }
 }

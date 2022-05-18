@@ -1,19 +1,19 @@
 {
     "EXTRACT": {
-        "import_path": "https://www.kaggle.com/datasets/gpreda/slava-ukraini-tweets/versions/{version}",
-        "import_version": 8,
+        "import_path": "../../data/slava_ukraini_tweets{version}.csv",
+        "import_version": 12,
         "import_dest": "../../data/slava_ukraini_tweets{version}.csv",
-        "new_dataset": false
+        "overwrite_data": false
     },
 
     "TRANSFORM": {
-        "clean_tweet": [
+        "clean_tweet_regexs": [
             "https?:\\/\\/[a-zA-Z0-9@:%._\\/+~#=?&;-]*",
             "\\$[a-zA-Z0-9]*",
             "\\@[a-zA-Z0-9]*",
             "[^a-zA-Z\\\"]"
         ],
-        "clean_hashtag": [
+        "clean_hashtag_regexs": [
             "\\$[a-zA-Z0-9]*",
             "[^a-zA-Z\\\"]"
         ],
@@ -38,7 +38,7 @@
 
     "LOAD": {
         "config": "./config/config_{timestamp}.json",
-        "notebook": "../pipeline_2/pipeline_1",
+        "notebook": "../modules/pipeline_1",
         "transform": "./data/transformed/slava_ukraine_sentiment_{timestamp}.csv",
         "word_vec": "./models/slava_word_vec_{timestamp}.model",
         "kmeans": "./models/slava_kmeans_{timestamp}.joblib",

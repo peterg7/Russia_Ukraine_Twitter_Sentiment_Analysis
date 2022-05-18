@@ -3,7 +3,7 @@
         "import_path": null,
         "import_version": null,
         "import_dest": "./tweet_sentiment_{timestamp}.csv",
-        "new_dataset": false,
+        "overwrite_data": false,
         "word_vec": "",
         "kmeans": "",
         "embeddings": "",
@@ -13,11 +13,11 @@
     },
 
     "TRANSFORM": {
-        "clean_tweet": [],
-        "clean_hashtag": [],
+        "clean_tweet_regexs": [],
+        "clean_hashtag_regexs": [],
         "column_mappings": {},
         "filter_words": [],
-        "word_vec_args": {
+        "word_vec_params": {
             "vector_size": 300,
             "window": 5,
             "min_count": 4,
@@ -27,16 +27,26 @@
             "alpha": 0.03,
             "min_alpha": 0.007,
             "seed": 42,
-            "progress_per": 50000,
+            "epochs": 30
+        },
+        "phrases_params": {
+            "min_count": 1,
+            "progress_per": 50000
+        },
+        "word_vec_vocab": {
+            "progress_per": 50000
+        },
+        "word_vec_train": {
             "epochs": 30,
             "report_delay": 1
         },
-        "kmeans_args": {
+        "kmeans_params": {
             "n_clusters": 3,
             "max_iter": 1000,
             "n_init": 50,
             "random_state": 42
         },
+        "kmeans_train": { },
         "sentiment_threshold": 0.15,
         "sentiment_map": {
             "-1": "negative",
@@ -48,14 +58,15 @@
 
     "MODEL": {
         "build_models": true,
-        "vectorizer_args": {
+        "test_size": 0.2,
+        "vectorizer_params": {
             "min_df": 3,
             "sublinear_tf": true,
             "ngram_range": [1, 2],
             "stop_words": "english"
         },
-        "linear_svc_args": {},
-        "multi_nb_args": {}
+        "linear_svc_params": {},
+        "multi_nb_params": {}
     },
 
     "LOAD": {
@@ -89,6 +100,7 @@
             "import_dest",
             "config",
             "notebook",
+            "transform",
             "word_vec",
             "kmeans",
             "embeddings",

@@ -1,4 +1,6 @@
 
+from collections import defaultdict
+from operator import itemgetter
 import re
 import os
 import sys
@@ -8,9 +10,8 @@ from datetime import datetime
 import fsspec
 
 # from ControlSignal import ControlSignal, CONTROL_ACTIONS, CONTROL_FLAGS
-from shared_imports import ControlSignal, CONTROL_ACTIONS, CONTROL_FLAGS
+from shared_imports import ControlSignal, CONTROL_ACTIONS, CONTROL_FLAGS, np
 
-DFLT_CONFIG_PATH = '../default_config.json'
 ERROR_INVALID_NAME = 123
 
 def acceptedPathname(pathname: str) -> bool:
@@ -107,41 +108,121 @@ def validatePath(path, **kwargs):
     return True, info, protocol
 
 
+def _flattenDicts(d):
+    if isinstance(d, (list, tuple)):
+        flat_dict = {}
+        for x in d:
+            if isinstance(x, dict):
+                flat_dict.update(x)
+        return flat_dict
 
-def validateConfig(config=None, extract_config={}, transform_config={}, model_config={}, load_config={}):
+    elif not isinstance(d, dict):
+        return {}
+    
+    return d
+
+
+def mergeDicts(a, b, no_merge=None, path=None):
+    if path is None: 
+        path = []
+    if no_merge is None:
+        no_merge = set([])
+    if new_no_merge := b.get('no_merge', a.get('no_merge')):
+        no_merge |= set(new_no_merge)
+    
+    for key in filter(lambda x: x not in no_merge, b):
+        if key in a:
+            if isinstance(a[key], dict) and isinstance(b[key], dict):
+                mergeDicts(a=a[key], b=b[key], no_merge=no_merge, path=(path + [str(key)]))
+        else:
+            a[key] = b[key]
+    return a, no_merge
+
+
+def mergeConfigs(configs, nested_params=None, excluded_params=None):
+    as_list = lambda x: [] if not x else [x] if (not hasattr(x, '__iter__') or isinstance(x, str)) else x
+    configs = as_list(configs)
+    nested = as_list(nested_params)
+    excluded = as_list(excluded_params)
+
+    drop_meta = lambda conf_dict: { k: v for k, v in conf_dict.items() if k != 'metadata' }
+
+    config_data = {}
+    config_metadata = {"no_merge": set([])}
+    for conf in configs:
+        if isinstance(conf, str):
+            with open(conf, 'r') as f:
+                data = json.load(f)
+        elif isinstance(conf, dict):
+            data = conf
+        else:
+            continue
+        
+        if (nested_keys := np.intersect1d(list(data.keys()), nested)).size > 0:
+            data = _flattenDicts(itemgetter(*nested_keys)(data))
+        
+        if (included_keys := np.setdiff1d(list(data.keys()), excluded)).size > 0:
+            data = { k: v for k, v in data.items() if k in included_keys }
+        
+        
+        if metadata := data.get('metadata'):
+            _, no_merge = mergeDicts(config_metadata, metadata)
+            config_metadata["no_merge"] |= no_merge
+
+        _, no_merge = mergeDicts(config_data, drop_meta(data), no_merge=config_metadata.get('no_merge'))
+        config_metadata["no_merge"] |= no_merge
+        
+        
+    return config_data, config_metadata
+
+
+def buildConfig(dflt_configs, usr_configs='', extract_config={}, transform_config={}, 
+                        model_config={}, evaluate_config={}, load_config={}, **kwargs):
     signals = []
     pipeline_params = {}
 
-    if not config and (not extract_config and not transform_config):
-        signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.MISSING_REQUIRED, "Must provide a config file or both extract & transform configs."))
-        return signals, pipeline_params
-
-    # Import default config
-    with open(DFLT_CONFIG_PATH, 'r') as f:
-        raw_data = json.load(f)
-        dflt_config_data = { k: v for k, v in raw_data.items() if k != 'metadata' }
-        config_metadata = raw_data['metadata']
-
-    # Import user config
-    if isinstance(config, str):
-        with open(config, 'r') as f:
-            config_data = json.load(f)
-    elif isinstance(config, dict):
-        config_data = config
+    stage_configs = (extract_config, transform_config, model_config, evaluate_config, load_config)
+    if not dflt_configs:
+        signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.MISSING_REQUIRED, 
+                                        "Must provide default configuration."))
+        return signals, None
+    
+    if isinstance(dflt_configs, str) or hasattr(dflt_configs, '__iter__'):
+        dflt_config_data, dflt_metadata = mergeConfigs(dflt_configs, **kwargs)
     else:
-        config_data = extract_config | transform_config
+        signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_CONFIG_TYPE, 
+                                            "Can not interpret default configuration."))
+        return signals, None
+    
+    if not usr_configs:
+        if not any(stage_configs):
+            signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.MISSING_OPTIONAL_ARGS, 
+                                            "No user or stage configs. Executing with the default configuration."))
+            return signals, { k: v for k, v in dflt_config_data.items() if k != 'metadata' }
+        usr_config_data, usr_metadata = {}, {}
+    elif isinstance(usr_configs, str) or hasattr(usr_configs, '__iter__'):
+        usr_config_data, usr_metadata = mergeConfigs(usr_configs, **kwargs)
+    else:
+        signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_CONFIG_TYPE, 
+                                            "Can not interpret provided user configuration."))
+        return signals, None
 
-    # Combine configs
-    agg_config_data = { **config_data, **extract_config, **transform_config, **model_config, **load_config }
+    
+    metadata, _ = mergeDicts(usr_metadata, dflt_metadata)
+
+    # Combine user-provided configs
+    # agg_config_data = dict(usr_config_data)
+    agg_config_data = defaultdict(dict, {k: v for d in stage_configs for k, v in d.items()})
+    agg_config_data.update(usr_config_data)
 
     # Establish valid config areas
     for k in dflt_config_data.keys():
         if not k in agg_config_data:
-            if k in config_metadata['areas']['required']:
+            if k in metadata['areas']['required']:
                 signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.MISSING_AREA, f'Could not find {k}'))
                 return signals, pipeline_params
             else:
-                signals.append(ControlSignal(CONTROL_ACTIONS.WARNING, CONTROL_FLAGS.MISSING_AREA, f'Could not find {k}'))
+                signals.append(ControlSignal(CONTROL_ACTIONS.INFO , CONTROL_FLAGS.MISSING_AREA, f'Could not find {k}'))
                 pipeline_params[k] = dflt_config_data[k]
         else:
             pipeline_params[k] = agg_config_data[k]
@@ -151,7 +232,7 @@ def validateConfig(config=None, extract_config={}, transform_config={}, model_co
     agg_dflt_keys = [k for values in dflt_config_data.values() for k in values.keys()]
     agg_user_keys = [k for values in agg_config_data.values() for k in values.keys()]
     missing_params = set(agg_dflt_keys) - set(agg_user_keys)
-    missing_required = missing_params.intersection(set(config_metadata['required_params']))
+    missing_required = missing_params.intersection(set(metadata['required_params']))
     if missing_required:
         signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.MISSING_REQUIRED, f"Cound not find the following fields: {' | '.join(missing_required)}"))
         return signals, pipeline_params
@@ -161,37 +242,81 @@ def validateConfig(config=None, extract_config={}, transform_config={}, model_co
     for area, dflt_values in dflt_config_data.items():
         for key, dflt_val in dflt_values.items():
             
-            if key in config_metadata['locations']:
+            if key in metadata['locations']:
                 if (found_path := agg_config_data[area].get(key)):
-                    formatted_path, timestamp = formatPath(found_path, agg_config_data, curr_timestamp)
-                    valid_path, path_info, path_protocol = validatePath(formatted_path)
-                    if valid_path:
-                        pipeline_params[area][key] = formatted_path
-                        pipeline_params[area][f'{key}_protocol'] = path_protocol
-                    elif key in config_metadata['required_params']:
-                        signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}]'))
-                        return signals, pipeline_params
+                    if isinstance(found_path, dict):
+                        valid_locations = {}
+                        for k, v in found_path.items():
+                            if v:
+                                formatted_path, timestamp = formatPath(v, agg_config_data, curr_timestamp)
+                                valid_path, path_info, path_protocol = validatePath(formatted_path)
+                                if valid_path:
+                                    valid_locations[k] = formatted_path
+                                    valid_locations[f'{k}_protocol'] = path_protocol
+                                elif k in metadata['required_params']:
+                                    signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}]'))
+                                    return signals, pipeline_params
+                                else:
+                                    signals.append(ControlSignal(CONTROL_ACTIONS.WARNING, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}].\nAble to substitute with default value.'))
+                                    valid_locations[k] = formatted_path
+                                    valid_locations[f'{k}_protocol'] = path_protocol
+                        pipeline_params[area][key] = valid_locations
                     else:
-                        signals.append(ControlSignal(CONTROL_ACTIONS.WARNING, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}].\nAble to substitute with default value.'))
-                        pipeline_params[area][key] = formatted_path
-                        pipeline_params[area][f'{key}_protocol'] = path_protocol
+                        formatted_path, timestamp = formatPath(found_path, agg_config_data, curr_timestamp)
+                        valid_path, path_info, path_protocol = validatePath(formatted_path)
+                        if valid_path:
+                            pipeline_params[area][key] = formatted_path
+                            pipeline_params[area][f'{key}_protocol'] = path_protocol
+                        elif key in metadata['required_params']:
+                            signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}]'))
+                            return signals, pipeline_params
+                        else:
+                            signals.append(ControlSignal(CONTROL_ACTIONS.WARNING, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}].\nAble to substitute with default value.'))
+                            pipeline_params[area][key] = formatted_path
+                            pipeline_params[area][f'{key}_protocol'] = path_protocol
                 else:
-                    if area == 'EXTRACT':
+                    if isinstance(dflt_val, dict):
+                        valid_locations = {}
+                        for k, v in dflt_val.items():
+                            if v:
+                                print(v)
+                                formatted_path, timestamp = formatPath(v, agg_config_data, curr_timestamp)
+                                print(formatted_path)
+                                valid_path, path_info, path_protocol = validatePath(formatted_path)
+                                if valid_path:
+                                    valid_locations[k] = formatted_path
+                                    valid_locations[f'{k}_protocol'] = path_protocol
+                                elif k in metadata['required_params']:
+                                    signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}]'))
+                                    return signals, pipeline_params
+                                else:
+                                    signals.append(ControlSignal(CONTROL_ACTIONS.WARNING, CONTROL_FLAGS.INVALID_LOCATION, f'Failed to validate path: [{formatted_path}].\nAble to substitute with default value.'))
+                                    valid_locations[k] = formatted_path
+                                    valid_locations[f'{k}_protocol'] = path_protocol
+                        pipeline_params[area][key] = valid_locations
+                            
+                    elif area == 'EXTRACT':
                         signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.MISSING_IMPORT_LOC, f'{area} - {key}'))
                     elif area == 'LOAD':
                         signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.MISSING_EXPORT_LOC, f'{area} - {key}'))
                     else:
                         signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.UNKNOWN, f"Occurred while searching for [{area} - {key}]"))
 
-            elif key in config_metadata['required_params']:
+            elif key in metadata['required_params']:
                 if (required_param := agg_config_data[area].get(key)):
                         pipeline_params[area][key] = required_param
                 else:
                     signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.MISSING_REQUIRED, f"Missing required field: [{area} - {key}]"))
                     return signals, pipeline_params
 
-            elif key == 'sentiment_map':
+            elif key == 'sentiment_map' or key == 'sentiment_vals':
                 if (found_map := agg_config_data[area].get(key)):
+                    if key == 'sentiment_vals':
+                        found_map = found_map.get('value_mapping')
+                        cluster_map = found_map.get('cluster_mapping')
+                    else:
+                        cluster_map = []
+
                     converted_map = {}
                     for k, v in found_map.items():
                         try:
@@ -200,14 +325,28 @@ def validateConfig(config=None, extract_config={}, transform_config={}, model_co
                             converted_map = dflt_val
                             signals.append(ControlSignal(CONTROL_ACTIONS.WARNING, CONTROL_FLAGS.INVALID_CONFIG_TYPE, "Sentiment map must have integer keys. Could not convert provided value."))
                             continue
-                    missing_vals = set(config_metadata['necessary_sentiment_values']) - set(converted_map.values())
+                    missing_vals = set(metadata['necessary_sentiment_values']) - set(converted_map.values())
                     dflt_replacements = { k: v for k, v in dflt_val.items() if v in missing_vals }
                     converted_map.update(dflt_replacements)
+                    
+                    if cluster_map:
+                        pipeline_params[area][key]['value_mapping'] = converted_map
+                        if invalid_vals := set(range(-1, 2)) ^ set(cluster_map):
+                            cluster_map.extend(list(invalid_vals))
+                        pipeline_params[area][key]['cluster_mapping'] = cluster_map
                         
-                    pipeline_params[area][key] = converted_map
+                    else:
+                        pipeline_params[area][key] = converted_map
                 else:
                     signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.MISSING_OPTIONAL_ARGS, f'{area} - {key}'))
-                    pipeline_params[area][key] = { int(k): v for k, v in dflt_val.items() }
+                    if key == 'sentiment_vals':
+                        converted_vals = {
+                            'value_mapping': { int(k): v for k, v in dflt_val['value_mapping'].items() },
+                            'cluster_mapping': dflt_val['cluster_mapping']
+                        }
+                    else:
+                        converted_vals = { int(k): v for k, v in dflt_val.items() }
+                    pipeline_params[area][key] = converted_vals
 
             elif key in pipeline_params[area]:
                 # Some sort of validation...?

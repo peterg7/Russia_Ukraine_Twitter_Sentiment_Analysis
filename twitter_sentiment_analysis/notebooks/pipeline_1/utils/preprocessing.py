@@ -83,6 +83,10 @@ def cleanAndFilter(raw_tweets_df, clean_tweet_regexs=[], clean_hashtag_regexs=[]
     tweets_df['month'] = tweets_df['date'].dt.month
     # tweets_df['year'] = tweets_df['date'].dt.year
 
+    # Filter rows which don't have any clean words
+    tweets_df.replace([], np.nan, inplace=True)
+    tweets_df.dropna(subset=['clean_tweet_words'], inplace=True)
+
     if (filter_words):
         # Remove all tweets which do not have the provided target words
         keywords_str = '|'.join(filter_words)

@@ -1,0 +1,68 @@
+{
+    "EXTRACT": {
+        "sentiment_dataset": "./data/transformed/russia_ukraine_sentiment.csv",
+        "slava_vectorizer": "../pipeline_1/models/vectorizer/slava_vectorizer.joblib",
+        "slava_models": {
+            "linear_svc": "../pipeline_1/models/linear_svc/slava_linearSVC.joblib",
+            "multi_nb": "../pipeline_1/models/multi_nb/slava_multinomialNB.joblib"
+        },
+        "slava_config": "../pipeline_1/config/execution_config.json",
+        "x_col": "clean_tweet",
+        "y_col": "sentiment_val"
+    },
+
+    "LOAD": {
+        "config": "./config/execution_config_{timestamp}.json",
+        "predictions":
+        {
+            "linear_svc": "./data/predictions/linear_svc/linearSVC_predictions_{timestamp}.joblib",
+            "multi_nb": "./data/predictions/multi_nb/multinomialNB_predictions_{timestamp}.joblib"
+        },
+        "metrics":
+        {
+            "linear_svc": "./data/metrics/linear_svc/linearSVC_metrics_{timestamp}.joblib",
+            "multi_nb": "./data/metrics/multi_nb/multinomialNB_metrics_{timestamp}.joblib"
+        },
+        "cross_validations":
+        {
+            "linear_svc": "./data/cv_scores/linear_svc/linearSVC_cv_scores_{timestamp}.joblib",
+            "multi_nb": "./data/cv_scores/multi_nb/multinomialNB_cv_scores_{timestamp}.joblib"
+        }
+    },
+
+    "PIPE_1": {
+        "EXTRACT": {
+            "import_path": "../../data/russia_vs_ukraine_tweets{version}.csv",
+            "import_version": "",
+            "import_dest": "../../data/russia_vs_ukraine_tweets{version}.csv",
+            "overwrite_data": false
+        },
+
+        "TRANSFORM": {
+            "filter_words": null,
+            "column_mappings": {
+                "date": "date",
+                "username": "username",
+                "retweets_count": "retweets",
+                "tweet": "tweet",
+                "hashtags": "hashtags"
+            }
+        },
+
+        "MODEL": {
+            "build_models": false
+        },
+
+        "LOAD": {
+            "config": "./config/russia_ukraine_execution_config_{timestamp}.json",
+            "notebook": null,
+            "transform": "./data/transformed/russia_ukraine_sentiment_{timestamp}.csv",
+            "word_vec": "./models/word_vecs/russia_ukraine_word_vec_{timestamp}.model",
+            "kmeans": "./models/kmeans/russia_ukraine_kmeans_{timestamp}.joblib",
+            "embeddings": "./data/embeddings/russia_ukraine_words_{timestamp}.csv",
+            "vectorizer": "./models/vectorizer/russia_ukraine_vectorizer_{timestamp}.joblib",
+            "linear_svc": "./models/linear_svc/russia_ukraine_linearSVC_{timestamp}.joblib",
+            "multi_nb": "./models/multi_nb/russia_ukraine_multinomialNB_{timestamp}.joblib"
+        }
+    }
+}

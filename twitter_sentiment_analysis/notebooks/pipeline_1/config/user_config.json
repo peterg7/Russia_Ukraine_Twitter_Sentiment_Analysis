@@ -1,7 +1,7 @@
 {
     "EXTRACT": {
         "import_path": "../../data/slava_ukraini_tweets{version}.csv",
-        "import_version": 12,
+        "import_version": 11,
         "import_dest": "../../data/slava_ukraini_tweets{version}.csv",
         "overwrite_data": false
     },
@@ -37,14 +37,13 @@
     },
 
     "LOAD": {
-        "config": "./config/config_{timestamp}.json",
-        "notebook": "../modules/pipeline_1",
-        "transform": "./data/transformed/slava_ukraine_sentiment_{timestamp}.csv",
-        "word_vec": "./models/slava_word_vec_{timestamp}.model",
-        "kmeans": "./models/slava_kmeans_{timestamp}.joblib",
+        "config": "./config/execution_config_{timestamp}.json",
+        "notebook": "./modules/pipeline_1",
+        "word_vec": "./models/word_vecs/slava_word_vec_{timestamp}.model",
+        "kmeans": "./models/kmeans/slava_kmeans_{timestamp}.joblib",
         "embeddings": "./data/embeddings/slava_words_{timestamp}.csv",
-        "vectorizer": "./models/slava_vectorizer_{timestamp}.joblib",
-        "linear_svc": "./models/slava_linearSVC_{timestamp}.joblib",
-        "multi_nb": "./models/slava_multinomialNB_{timestamp}.joblib"
+        "vectorizer": "./models/vectorizer/slava_vectorizer_{timestamp}.joblib",
+        "linear_svc": "./models/linear_svc/slava_linearSVC_{timestamp}.joblib",
+        "multi_nb": "./models/multi_nb/slava_multinomialNB_{timestamp}.joblib"
     }
 }

@@ -66,7 +66,22 @@
             "stop_words": "english"
         },
         "linear_svc_params": {},
-        "multi_nb_params": {}
+        "multi_nb_params": {},
+        "sentiment_vals":
+        {
+            "value_mapping":
+            {
+                "-1": "negative",
+                "0": "neutral",
+                "1": "positive"
+            },
+            "cluster_mapping":
+            [
+                -1,
+                0,
+                1
+            ]
+        }
     },
 
     "LOAD": {
@@ -117,6 +132,9 @@
                 "MODEL",
                 "LOAD"
             ]
-        }
+        },
+        "no_merge": [
+            "column_mappings"
+        ]
     }
 }

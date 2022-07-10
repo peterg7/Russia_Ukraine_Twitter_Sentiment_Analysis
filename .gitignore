@@ -3,20 +3,15 @@
 .AppleDouble
 .LSOverride
 
-# Ignore raw datasets
-twitter_sentiment_analysis/data/*
+# Ignore all non-visualizaton datasets
+twitter_sentiment_analysis/**/data/
 
-# Ignore built datasets
-pipeline_1/data/*
-
-# Ignore models
-models/*
+# Ignore ALL models
+models/
 
 # Kaggle credentials
 kaggle.json
 
-# Irrelevant configs
-config_*.json
 
 # Icon must end with two \r
 Icon

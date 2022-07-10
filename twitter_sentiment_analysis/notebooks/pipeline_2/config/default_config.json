@@ -1,0 +1,99 @@
+{
+    "EXTRACT":
+    {
+        "sentiment_dataset": null,
+        "sentiment_version": "",
+        "overwrite_sentiment": false,
+        "slava_vectorizer": "",
+        "vectorizer_version": "",
+        "overwrite_vectorizer": false,
+        "slava_models":
+        {
+            "linear_svc": "",
+            "multi_nb": ""
+        },
+        "slava_config": "",
+        "x_col": "",
+        "y_col": ""
+    },
+    "MODEL":
+    {},
+    "EVALUATE":
+    {
+        "cv_scores":
+        [
+            "accuracy"
+        ],
+        "kfold": null
+    },
+    "LOAD":
+    {
+        "config": "",
+        "notebook": "",
+        "predictions":
+        {
+            "linear_svc": "",
+            "multi_nb": ""
+        },
+        "metrics":
+        {
+            "linear_svc": "",
+            "multi_nb": ""
+        },
+        "cross_validations":
+        {
+            "linear_svc": "",
+            "multi_nb": ""
+        }
+    },
+    "PIPE_1":
+    {
+        "EXTRACT":
+        {},
+        "TRANSFORM":
+        {},
+        "MODEL":
+        {},
+        "LOAD":
+        {}
+    },
+    "metadata":
+    {
+        "required_params":
+        [
+            "slava_config",
+            "x_col",
+            "y_col"
+        ],
+        "locations":
+        [
+            "sentiment_dataset",
+            "slava_vectorizer",
+            "slava_config",
+            "slava_models",
+            "config",
+            "notebook",
+            "transform",
+            "word_vec",
+            "kmeans",
+            "embeddings",
+            "vectorizer",
+            "predictions",
+            "metrics",
+            "cross_validations"
+        ],
+        "areas":
+        {
+            "required":
+            [
+                "EXTRACT"
+            ],
+            "optional":
+            [
+                "EVALUATE",
+                "LOAD",
+                "PIPE_1"
+            ]
+        }
+    }
+}

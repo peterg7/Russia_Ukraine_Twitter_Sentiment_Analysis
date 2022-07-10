@@ -177,7 +177,8 @@ def processSignals(signals, generated_files=[], log_level=None, terminate=False)
     abort_mask = [s.abort for s in signals]
     abort_signals, std_signals = np_signals[abort_mask], np_signals[np.logical_not(abort_mask)]
     
-    for sig in list(filter(lambda x: x <= log_level, std_signals)):
+    filtered_signals = list(filter(lambda x: x <= log_level, std_signals))
+    for sig in filtered_signals:
         print(sig)
 
     if np.any(abort_signals):
@@ -197,9 +198,8 @@ def processSignals(signals, generated_files=[], log_level=None, terminate=False)
         print('\nTerminating Process...')
         exit_nb()
     
-    print()
     if terminate:
-        print('<done>')
+        print('\n<done>')
     
 
 

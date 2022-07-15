@@ -139,8 +139,8 @@ def mergeDicts(a, b, no_merge=None, path=None):
     return a, no_merge
 
 
-def mergeConfigs(configs, nested_params=None, excluded_params=None):
-    as_list = lambda x: [] if not x else [x] if (not hasattr(x, '__iter__') or isinstance(x, str)) else x
+def mergeConfigs(configs, init_metadata={}, nested_params=None, excluded_params=None):
+    as_list = lambda x: [] if not x else [x] if (not hasattr(x, '__iter__') or isinstance(x, (str, dict))) else x
     configs = as_list(configs)
     nested = as_list(nested_params)
     excluded = as_list(excluded_params)
@@ -148,7 +148,7 @@ def mergeConfigs(configs, nested_params=None, excluded_params=None):
     drop_meta = lambda conf_dict: { k: v for k, v in conf_dict.items() if k != 'metadata' }
 
     config_data = {}
-    config_metadata = {"no_merge": set([])}
+    config_metadata = {**{"no_merge": set([])}, **init_metadata}
     for conf in configs:
         if isinstance(conf, str):
             with open(conf, 'r') as f:
@@ -172,7 +172,6 @@ def mergeConfigs(configs, nested_params=None, excluded_params=None):
         _, no_merge = mergeDicts(config_data, drop_meta(data), no_merge=config_metadata.get('no_merge'))
         config_metadata["no_merge"] |= no_merge
         
-        
     return config_data, config_metadata
 
 
@@ -188,7 +187,7 @@ def buildConfig(dflt_configs, usr_configs='', extract_config={}, transform_confi
         return signals, None
     
     if isinstance(dflt_configs, str) or hasattr(dflt_configs, '__iter__'):
-        dflt_config_data, dflt_metadata = mergeConfigs(dflt_configs, **kwargs)
+        dflt_config_data, metadata = mergeConfigs(dflt_configs, **kwargs)
     else:
         signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_CONFIG_TYPE, 
                                             "Can not interpret default configuration."))
@@ -199,19 +198,15 @@ def buildConfig(dflt_configs, usr_configs='', extract_config={}, transform_confi
             signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.MISSING_OPTIONAL_ARGS, 
                                             "No user or stage configs. Executing with the default configuration."))
             return signals, { k: v for k, v in dflt_config_data.items() if k != 'metadata' }
-        usr_config_data, usr_metadata = {}, {}
+        usr_config_data = {}
     elif isinstance(usr_configs, str) or hasattr(usr_configs, '__iter__'):
-        usr_config_data, usr_metadata = mergeConfigs(usr_configs, **kwargs)
+        usr_config_data, _ = mergeConfigs(usr_configs, init_metadata=metadata, **kwargs)
     else:
         signals.append(ControlSignal(CONTROL_ACTIONS.ABORT, CONTROL_FLAGS.INVALID_CONFIG_TYPE, 
                                             "Can not interpret provided user configuration."))
         return signals, None
 
-    
-    metadata, _ = mergeDicts(usr_metadata, dflt_metadata)
-
     # Combine user-provided configs
-    # agg_config_data = dict(usr_config_data)
     agg_config_data = defaultdict(dict, {k: v for d in stage_configs for k, v in d.items()})
     agg_config_data.update(usr_config_data)
 
@@ -279,9 +274,7 @@ def buildConfig(dflt_configs, usr_configs='', extract_config={}, transform_confi
                         valid_locations = {}
                         for k, v in dflt_val.items():
                             if v:
-                                print(v)
                                 formatted_path, timestamp = formatPath(v, agg_config_data, curr_timestamp)
-                                print(formatted_path)
                                 valid_path, path_info, path_protocol = validatePath(formatted_path)
                                 if valid_path:
                                     valid_locations[k] = formatted_path
@@ -355,5 +348,6 @@ def buildConfig(dflt_configs, usr_configs='', extract_config={}, transform_confi
             else:
                 signals.append(ControlSignal(CONTROL_ACTIONS.INFO, CONTROL_FLAGS.MISSING_OPTIONAL_ARGS, f'{area} - {key}'))
                 pipeline_params[area][key] = dflt_val
-
+    
+    pipeline_params['metadata'] = metadata
     return signals, pipeline_params

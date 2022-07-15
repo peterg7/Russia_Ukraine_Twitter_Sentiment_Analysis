@@ -1,0 +1,21 @@
+body {
+    background-color: #F2EDE4;
+  }
+  
+  .container {
+    margin-top: 20px;
+  }
+  
+  .panel {
+    background-color: #D9D1C7;
+  }
+  
+  .axis path {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+  
+  .bar {
+    fill: steelblue;
+  }

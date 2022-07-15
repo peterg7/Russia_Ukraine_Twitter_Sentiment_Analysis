@@ -59,7 +59,7 @@ def cleanPipelineOutput(pipelines, keep=1, strip_most_recent=True, purge=False, 
 
     def parseAndStage(dir_path):
         # Collect all files in the specified directory
-        filter_func = lambda x: not x.startswith(EXCLUDE_FILE_PREFIXES) and not x.endswith(EXCLUDE_FILE_EXT)
+        filter_func = lambda x: not x.startswith(EXCLUDE_FILE_PREFIXES) and not x.endswith(EXCLUDE_FILE_EXT) and not re.search(r'-v\d+\.', x)
         filenames = list(filter(filter_func, next(os.walk(dir_path), (None, None, []))[2]))
         staged_paths, removed_files, renamed_files = [], [], []
 
@@ -170,6 +170,6 @@ def cleanPipelineOutput(pipelines, keep=1, strip_most_recent=True, purge=False, 
 
 
 
-cleanPipelineOutput(pipelines=2, strip_most_recent=True, purge=False, verbose=True, automated=True)
+# cleanPipelineOutput(pipelines=1, strip_most_recent=True, purge=False, verbose=True, automated=False)
 
 

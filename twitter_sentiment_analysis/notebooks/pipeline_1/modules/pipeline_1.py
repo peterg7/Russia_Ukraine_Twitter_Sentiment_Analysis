@@ -309,14 +309,19 @@ def load(transform_df, built_models={}, destinations={}, config=None):
             cell_markers = set([])
             term_index = len(lines) - 1
             for i, line in enumerate(lines):
-                if '# Execute `pipeline`' in line:
+                if line == '# ## Execute `pipeline`':
                     term_index = i
                     break
-                elif '# In[' in line:
+                elif '# In[' in line and not "SKIP" in line:
                     cell_markers.add(i)
 
             fp.writelines([l for i, l in enumerate(lines[:term_index]) if i not in cell_markers])
     return signals
+
+
+
+# ## Build `pipeline` function
+
 
 
 def pipeline1(default_configs, user_configs=None, extract_args={}, transform_args={}, model_args={}, load_args={}, log_level=None):
@@ -338,6 +343,9 @@ def pipeline1(default_configs, user_configs=None, extract_args={}, transform_arg
     processSignals(signals=extract_signals, generated_files=load_params, log_level=log_level) # Process error/info signals
     raw_tweets_df, imported_models = extracted_data
     print('Completed Stage 1.', end='\n\n')
+
+    # print(default_configs)
+    # print(raw_tweets_df.columns)
 
     ## Transform
     print('Stage 2: Transforming...')

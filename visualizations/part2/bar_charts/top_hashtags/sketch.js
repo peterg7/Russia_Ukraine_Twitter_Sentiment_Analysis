@@ -13,9 +13,9 @@ SCREEN_DIMENSIONS.innerHeight = SCREEN_DIMENSIONS.height - SCREEN_DIMENSIONS.top
 
 
 // Run `cleanDataOutput` in `file_manager.py` to ensure most recent data
-const DATA_LOC = '../../data/top_10_slava_hashtags.csv';
+const DATA_LOC = '../../data/top_10_russia_ukraine_hashtags.csv';
 // const DATA_LOC = 'https://raw.githubusercontent.com/peterg7/Russia_Ukraine_Twitter_Sentiment_Analysis/main/visualizations/part1/data/slava_tweets_sentiment_distrib.csv';
-const TITLE = "10 Most Frequently Used Hashtags";
+const TITLE = "10 Most Frequently Used Hashtags (Generalized)";
 
 // Append the svg object to the body of the page
 var svg = d3.select('body').append('svg')

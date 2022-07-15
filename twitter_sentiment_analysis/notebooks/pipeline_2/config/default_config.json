@@ -94,6 +94,9 @@
                 "LOAD",
                 "PIPE_1"
             ]
-        }
+        },
+        "no_merge": [
+            "column_mappings"
+        ]
     }
 }

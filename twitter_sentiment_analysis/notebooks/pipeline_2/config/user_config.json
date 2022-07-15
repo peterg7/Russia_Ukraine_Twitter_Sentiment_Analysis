@@ -1,6 +1,5 @@
 {
     "EXTRACT": {
-        "sentiment_dataset": "./data/transformed/russia_ukraine_sentiment.csv",
         "slava_vectorizer": "../pipeline_1/models/vectorizer/slava_vectorizer.joblib",
         "slava_models": {
             "linear_svc": "../pipeline_1/models/linear_svc/slava_linearSVC.joblib",
